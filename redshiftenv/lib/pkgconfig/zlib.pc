@@ -1,0 +1,13 @@
+prefix=/Users/aiwin/Documents/Projects/aws_redshift/redshiftenv
+exec_prefix=/Users/aiwin/Documents/Projects/aws_redshift/redshiftenv
+libdir=/Users/aiwin/Documents/Projects/aws_redshift/redshiftenv/lib
+sharedlibdir=/Users/aiwin/Documents/Projects/aws_redshift/redshiftenv/lib
+includedir=/Users/aiwin/Documents/Projects/aws_redshift/redshiftenv/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.13
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}
