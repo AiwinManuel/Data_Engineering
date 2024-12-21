@@ -1,0 +1,41 @@
+{
+  "name" : "hotel_booking_etl_job",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::216989129268:role/aws-data-engineering",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-216989129268-us-east-1/scripts/hotel_booking_etl_job.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "true",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-216989129268-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--enable-glue-datacatalog" : "true",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-216989129268-us-east-1/temporary/"
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "2.0",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1734653946734\":{\"DropFields\":{\"Inputs\":[\"node-1734653925871\"],\"Name\":\"Drop Fields\",\"Paths\":[[\"phone_number\"],[\"credit_card\"],[\"name\"],[\"email\"]]}},\"node-1734647751163\":{\"CatalogSource\":{\"Database\":\"hotel_bookings\",\"Name\":\"AWS Glue Data Catalog\",\"Table\":\"booking1_csv\"}},\"node-1734650470041\":{\"DropNullFields\":{\"Inputs\":[\"node-1734649985859\"],\"Name\":\"Drop Null Fields\",\"NullCheckBoxList\":{\"IsEmpty\":false,\"IsNegOne\":false,\"IsNullString\":false},\"NullTextList\":[{\"Datatype\":{\"Id\":\"string\",\"Label\":\"String\"},\"Value\":\"Unknown\"}]}},\"node-1734649985859\":{\"SparkSQL\":{\"Inputs\":[\"node-1734647751163\"],\"Name\":\"SQL Query\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"hotel\",\"Type\":\"string\"},{\"Name\":\"is_canceled\",\"Type\":\"bigint\"},{\"Name\":\"lead_time\",\"Type\":\"bigint\"},{\"Name\":\"arrival_date_year\",\"Type\":\"bigint\"},{\"Name\":\"arrival_date_month\",\"Type\":\"string\"},{\"Name\":\"arrival_date_week_number\",\"Type\":\"bigint\"},{\"Name\":\"arrival_date_day_of_month\",\"Type\":\"bigint\"},{\"Name\":\"stays_in_weekend_nights\",\"Type\":\"bigint\"},{\"Name\":\"stays_in_week_nights\",\"Type\":\"bigint\"},{\"Name\":\"adults\",\"Type\":\"bigint\"},{\"Name\":\"children\",\"Type\":\"double\"},{\"Name\":\"babies\",\"Type\":\"bigint\"},{\"Name\":\"meal\",\"Type\":\"string\"},{\"Name\":\"country\",\"Type\":\"string\"},{\"Name\":\"market_segment\",\"Type\":\"string\"},{\"Name\":\"distribution_channel\",\"Type\":\"string\"},{\"Name\":\"is_repeated_guest\",\"Type\":\"bigint\"},{\"Name\":\"previous_cancellations\",\"Type\":\"bigint\"},{\"Name\":\"previous_bookings_not_canceled\",\"Type\":\"bigint\"},{\"Name\":\"reserved_room_type\",\"Type\":\"string\"},{\"Name\":\"assigned_room_type\",\"Type\":\"string\"},{\"Name\":\"booking_changes\",\"Type\":\"bigint\"},{\"Name\":\"deposit_type\",\"Type\":\"string\"},{\"Name\":\"agent\",\"Type\":\"double\"},{\"Name\":\"company\",\"Type\":\"string\"},{\"Name\":\"days_in_waiting_list\",\"Type\":\"bigint\"},{\"Name\":\"customer_type\",\"Type\":\"string\"},{\"Name\":\"adr\",\"Type\":\"double\"},{\"Name\":\"required_car_parking_spaces\",\"Type\":\"bigint\"},{\"Name\":\"total_of_special_requests\",\"Type\":\"bigint\"},{\"Name\":\"reservation_status\",\"Type\":\"string\"},{\"Name\":\"reservation_status_date\",\"Type\":\"string\"},{\"Name\":\"name\",\"Type\":\"string\"},{\"Name\":\"email\",\"Type\":\"string\"},{\"Name\":\"phone_number\",\"Type\":\"string\"},{\"Name\":\"credit_card\",\"Type\":\"string\"}]}],\"SqlAliases\":[{\"Alias\":\"myDataSource\",\"From\":\"node-1734647751163\"}],\"SqlQuery\":\"SELECT \\n    hotel,\\n    is_canceled,\\n    lead_time,\\n    arrival_date_year,\\n    arrival_date_month,\\n    arrival_date_week_number,\\n    arrival_date_day_of_month,\\n    stays_in_weekend_nights,\\n    stays_in_week_nights,\\n    adults,\\n    COALESCE(children, 0) AS children,\\n    babies,\\n    meal,\\n    COALESCE(country, 'Unknown') AS country,\\n    market_segment,\\n    distribution_channel,\\n    is_repeated_guest,\\n    previous_cancellations,\\n    previous_bookings_not_canceled,\\n    reserved_room_type,\\n    assigned_room_type,\\n    booking_changes,\\n    deposit_type,\\n    COALESCE(agent, 0) AS agent,\\n    COALESCE(company, 0) AS company,\\n    days_in_waiting_list,\\n    customer_type,\\n    adr,\\n    required_car_parking_spaces,\\n    total_of_special_requests,\\n    reservation_status,\\n    reservation_status_date,\\n    name,\\n    email,\\n    phone_number,\\n    credit_card\\nFROM myDataSource\"}},\"node-1734654575706\":{\"SparkSQL\":{\"Inputs\":[\"node-1734653946734\"],\"Name\":\"SQL Query\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"total_stay\",\"Type\":\"bigint\"},{\"Name\":\"normalized_adr\",\"Type\":\"double\"},{\"Name\":\"arrival_date_month_numeric\",\"Type\":\"int\"},{\"Name\":\"total_guests\",\"Type\":\"double\"},{\"Name\":\"is_repeated_guest\",\"Type\":\"bigint\"},{\"Name\":\"hotel\",\"Type\":\"string\"},{\"Name\":\"adr\",\"Type\":\"double\"},{\"Name\":\"arrival_date_month\",\"Type\":\"string\"},{\"Name\":\"stays_in_weekend_nights\",\"Type\":\"bigint\"},{\"Name\":\"stays_in_week_nights\",\"Type\":\"bigint\"},{\"Name\":\"adults\",\"Type\":\"bigint\"},{\"Name\":\"children\",\"Type\":\"double\"},{\"Name\":\"babies\",\"Type\":\"bigint\"}]}],\"SqlAliases\":[{\"Alias\":\"myDataSource\",\"From\":\"node-1734653946734\"}],\"SqlQuery\":\"SELECT \\n    \\n    stays_in_weekend_nights + stays_in_week_nights AS total_stay,\\n    \\n    \\n    (adr - MIN(adr) OVER()) / (MAX(adr) OVER() - MIN(adr) OVER()) AS normalized_adr,\\n\\n    \\n    CASE \\n        WHEN arrival_date_month = 'January' THEN 1\\n        WHEN arrival_date_month = 'February' THEN 2\\n        WHEN arrival_date_month = 'March' THEN 3\\n        WHEN arrival_date_month = 'April' THEN 4\\n        WHEN arrival_date_month = 'May' THEN 5\\n        WHEN arrival_date_month = 'June' THEN 6\\n        WHEN arrival_date_month = 'July' THEN 7\\n        WHEN arrival_date_month = 'August' THEN 8\\n        WHEN arrival_date_month = 'September' THEN 9\\n        WHEN arrival_date_month = 'October' THEN 10\\n        WHEN arrival_date_month = 'November' THEN 11\\n        WHEN arrival_date_month = 'December' THEN 12\\n        WHEN meal = 'BB' THEN 1\\n        WHEN meal = 'HB' THEN 2\\n        WHEN meal = 'FB' THEN 3\\n        ELSE 0\\n    END AS arrival_date_month_numeric,\\n\\n    \\n    adults + COALESCE(children, 0) + COALESCE(babies, 0) AS total_guests,\\n\\n\\n    is_repeated_guest,\\n    hotel,\\n    adr,\\n    arrival_date_month,\\n    stays_in_weekend_nights,\\n    stays_in_week_nights,\\n    adults,\\n    children,\\n    babies\\n\\nFROM \\n    myDataSource\"}},\"node-1734653925871\":{\"DropDuplicates\":{\"Columns\":[],\"Inputs\":[\"node-1734649470938\"],\"Name\":\"Drop Duplicates\"}},\"node-1734665276679\":{\"S3GlueParquetTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1734665226775\",\"IsEnabled\":true},\"Compression\":\"snappy\",\"Inputs\":[\"node-1734654575706\"],\"Name\":\"Amazon S3\",\"PartitionKeys\":[],\"Path\":\"s3://aiwinhotelbookings/Hotel_Bookings/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}},\"node-1734649470938\":{\"PIIDetection\":{\"DetectionSensitivity\":\"LOW\",\"EntityTypesToDetect\":[\"CANADA_DRIVING_LICENSE\",\"CANADA_GOVERNMENT_IDENTIFICATION_CARD_NUMBER\",\"CANADA_PASSPORT_NUMBER\",\"CANADA_PERMANENT_RESIDENCE_NUMBER\",\"CANADA_PERSONAL_HEALTH_NUMBER\",\"CANADA_SOCIAL_INSURANCE_NUMBER\"],\"Inputs\":[\"node-1734650470041\"],\"MaskValue\":\"\",\"Name\":\"Detect Sensitive Data\",\"NumLeftCharsToExclude\":0,\"NumRightCharsToExclude\":0,\"OutputColumnName\":\"DetectedEntities\",\"PiiType\":\"ColumnHashing\",\"RedactText\":\"*******\",\"SampleFraction\":0.7,\"ThresholdFraction\":0.1}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Data_Engineering",
+    "branch" : "redshift",
+    "folder" : "s3-glue-redshift"
+  }
+}
