@@ -203,7 +203,7 @@ def generate_resignations(num_records=50, employee_ids=None):
     return pd.DataFrame(resignations)
 
 
-# Generate Projects Data
+# Generating Projects Data
 def generate_projects(num_projects=50):
     projects = []
     for _ in range(num_projects):
@@ -217,7 +217,7 @@ def generate_projects(num_projects=50):
         })
     return pd.DataFrame(projects)
 
-# Generate Project Assignments Data
+# Generating Project Assignments Data
 def generate_project_assignments(num_assignments=200, employee_ids=None, project_ids=None):
     assignments = []
     for _ in range(num_assignments):
@@ -232,7 +232,7 @@ def generate_project_assignments(num_assignments=200, employee_ids=None, project
         })
     return pd.DataFrame(assignments)
 
-# Generate Employee Projects Data
+# Generating Employee Projects Data
 num_employees = 100
 employees_df = generate_employees(num_employees)
 departments_df = generate_departments(10)
@@ -249,7 +249,7 @@ projects_df = generate_projects(50)
 project_assignments_df = generate_project_assignments(200, employees_df["EmployeeID"].tolist(), projects_df["ProjectID"].tolist())
 
 
-# Save to CSV files
+# Saving to CSV files
 employees_df.to_csv("employees.csv", index=False)
 departments_df.to_csv("departments.csv", index=False)
 positions_df.to_csv("positions.csv", index=False)
