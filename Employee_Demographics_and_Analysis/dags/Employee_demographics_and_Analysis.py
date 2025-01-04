@@ -85,14 +85,18 @@ def merge_department_names(**kwargs):
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_tenure_group", key="employees_tenure_grouped"))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="departments"))
+    df_departments.rename(columns={"ManagerID": "DepartmentManagerID"}, inplace=True)
+
     df_employees = df_employees.merge(
-        df_departments[['DepartmentID', 'DepartmentName', 'ManagerID', 'Budget', 'Location', 'EstablishedDate']], 
+        df_departments[['DepartmentID', 'DepartmentName', 'DepartmentManagerID', 'Budget', 'Location', 'EstablishedDate']], 
         on='DepartmentID', how='left'
     )
+    
+    
     df_employees.fillna("", inplace=True)
-    # pd.set_option('display.max_columns', None)
-    # pd.set_option('display.width', 1000)
-    # print(df_employees)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 1000)
+    print(df_employees)
     ti.xcom_push(key="employees_final", value=df_employees.to_dict(orient='records'))
     
 def create_bigquery_table():
@@ -117,9 +121,15 @@ def create_bigquery_table():
     bigquery.SchemaField("DepartmentID", "INTEGER"),
     bigquery.SchemaField("DepartmentName", "STRING"),
     bigquery.SchemaField("DepartmentManagerID", "STRING"),  
-    bigquery.SchemaField("Budget", "INTEGER"),  
-    bigquery.SchemaField("Location", "STRING"),  
-    bigquery.SchemaField("EstablishedDate", "DATE")  
+    bigquery.SchemaField("Budget", "INTEGER"),
+    bigquery.SchemaField("Location", "STRING"),
+    bigquery.SchemaField("EstablishedDate", "DATE"),
+    bigquery.SchemaField("PositionID", "STRING"), 
+    bigquery.SchemaField("Salary", "FLOAT"),
+    bigquery.SchemaField("PerformanceScore", "STRING"),
+    bigquery.SchemaField("Email", "STRING"),
+    bigquery.SchemaField("PhoneNumber", "STRING"),
+    bigquery.SchemaField("EmploymentType", "STRING")
 ]
 
     table_ref = dataset_ref.table("employees_final")
@@ -135,6 +145,15 @@ def create_bigquery_table():
 def upload_to_bigquery(**kwargs):
     ti = kwargs['ti']
     df_final = pd.DataFrame(ti.xcom_pull(task_ids="merge_department_names", key="employees_final")) 
+    
+    expected_columns = [
+        "EmployeeID", "FirstName", "LastName", "Gender", "Age", "AgeGroup",
+        "DateOfBirth", "HireDate", "Tenure", "TenureGroup", "DepartmentID",
+        "DepartmentName", "DepartmentManagerID", "Budget", "Location", "EstablishedDate",
+        "PositionID", "Salary", "PerformanceScore", "Email", "PhoneNumber", "EmploymentType"
+    ] 
+    df_final = df_final[expected_columns]
+    df_final["Salary"] = pd.to_numeric(df_final["Salary"], errors="coerce")
     bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
     client = bq_hook.get_client()
     table_ref = client.dataset(bigquery_dataset_id, project=bigquery_project_id).table(bigquery_table_id)
