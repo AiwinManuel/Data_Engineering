@@ -2,17 +2,21 @@ from airflow.models import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-# from airflow.providers.google.cloud.operators.bigquery import BigQueryOperator
 from airflow.utils.dates import days_ago
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 import io
 from google.cloud import bigquery
 import pandas as pd
 
 
 
+
 s3_bucket_name = 'aiwins'
 employees_table_key = 'Company_Employee_Details/employees.csv'
 departments_table_key = 'Company_Employee_Details/departments.csv'
+bigquery_project_id = 'gcpairflow'
+bigquery_dataset_id = 'Employee_Demographics_and_Analysis'
+bigquery_table_id = 'employees_final'
 
 
 
@@ -81,14 +85,73 @@ def merge_department_names(**kwargs):
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_tenure_group", key="employees_tenure_grouped"))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="departments"))
-    df_employees = df_employees.merge(df_departments[['DepartmentID', 'DepartmentName']], on='DepartmentID', how='left')
+    df_employees = df_employees.merge(
+        df_departments[['DepartmentID', 'DepartmentName', 'ManagerID', 'Budget', 'Location', 'EstablishedDate']], 
+        on='DepartmentID', how='left'
+    )
+    df_employees.fillna("", inplace=True)
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.width', 1000)
+    # print(df_employees)
     ti.xcom_push(key="employees_final", value=df_employees.to_dict(orient='records'))
     
+def create_bigquery_table():
+    bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
+    
+    client = bq_hook.get_client()
+    
+    dataset_ref = client.dataset(bigquery_dataset_id,project=bigquery_project_id)
+    table_ref = dataset_ref.table(bigquery_table_id)
+
+    schema = [
+    bigquery.SchemaField("EmployeeID", "STRING"),
+    bigquery.SchemaField("FirstName", "STRING"),
+    bigquery.SchemaField("LastName", "STRING"),
+    bigquery.SchemaField("Gender", "STRING"),
+    bigquery.SchemaField("Age", "INTEGER"),
+    bigquery.SchemaField("AgeGroup", "STRING"),
+    bigquery.SchemaField("DateOfBirth", "DATE"),
+    bigquery.SchemaField("HireDate", "DATE"),
+    bigquery.SchemaField("Tenure", "INTEGER"),
+    bigquery.SchemaField("TenureGroup", "STRING"),
+    bigquery.SchemaField("DepartmentID", "INTEGER"),
+    bigquery.SchemaField("DepartmentName", "STRING"),
+    bigquery.SchemaField("DepartmentManagerID", "STRING"),  
+    bigquery.SchemaField("Budget", "INTEGER"),  
+    bigquery.SchemaField("Location", "STRING"),  
+    bigquery.SchemaField("EstablishedDate", "DATE")  
+]
+
+    table_ref = dataset_ref.table("employees_final")
+    
+    try:
+        client.get_table(table_ref)  
+        print("Table already exists.")
+    except Exception:
+        table = bigquery.Table(table_ref, schema=schema)
+        client.create_table(table)
+        print("Table created successfully.")
+    
+def upload_to_bigquery(**kwargs):
+    ti = kwargs['ti']
+    df_final = pd.DataFrame(ti.xcom_pull(task_ids="merge_department_names", key="employees_final")) 
+    bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
+    client = bq_hook.get_client()
+    table_ref = client.dataset(bigquery_dataset_id, project=bigquery_project_id).table(bigquery_table_id)
+    rows_to_insert = df_final.to_dict(orient="records")
+
+    errors = client.insert_rows_json(table_ref, rows_to_insert)  
+    if errors:
+        print(f"BigQuery insert errors: {errors}")
+    else:
+        print("Data successfully inserted into BigQuery.")
+
+
     
 
 default_args = {
     'owner': 'aiwin_manuel',
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
     'start_date': datetime(2024, 1, 1),
     'catchup': False,
@@ -152,5 +215,15 @@ with DAG(
         
     )
     
-extract_task >> standardize_gender_task >> calculate_age_task >> categorize_age_group_task >> calculate_tenure_task >> categorize_tenure_task >> count_department_task >> merge_department_task 
+    create_table_task = PythonOperator(
+    task_id="create_bigquery_table",
+    python_callable=create_bigquery_table,
+)
+    
+    upload_to_bigquery_task = PythonOperator(
+        task_id="upload_to_bigquery",
+        python_callable=upload_to_bigquery,)
+    
+    
+extract_task >> standardize_gender_task >> calculate_age_task >> categorize_age_group_task >> calculate_tenure_task >> categorize_tenure_task >> count_department_task >> merge_department_task >> create_table_task  >> upload_to_bigquery_task
         
