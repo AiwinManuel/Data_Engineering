@@ -50,6 +50,7 @@ def calculate_age(**kwargs):
 
 
 def categorize_age_group(**kwargs):
+    #Categorizing Age
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="calculate_age", key="employees_with_age"))
     bins = [0, 30, 40, 50, 60, 100]
@@ -58,6 +59,7 @@ def categorize_age_group(**kwargs):
     ti.xcom_push(key="employees_age_grouped", value=df_employees.to_dict(orient='records'))
 
 def calculate_tenure(**kwargs):
+    #Calculating Tenure
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_age_group", key="employees_age_grouped"))
     current_year = datetime.now().year
@@ -67,6 +69,7 @@ def calculate_tenure(**kwargs):
 
 
 def categorize_tenure_group(**kwargs):
+    #Categorizing Tenure
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="calculate_tenure", key="employees_with_tenure"))
     tenure_bins = [0, 2, 5, 10, 100]
@@ -76,6 +79,7 @@ def categorize_tenure_group(**kwargs):
 
 
 def count_employees_per_department(**kwargs):
+    #Count the number of employees per department
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="employees"))
     department_size = df_employees.groupby('DepartmentID')['EmployeeID'].count().reset_index()
@@ -83,6 +87,7 @@ def count_employees_per_department(**kwargs):
     ti.xcom_push(key="department_size", value=department_size.to_dict(orient='records'))
 
 def merge_department_names(**kwargs):
+    #Merge department names with the employee data
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_tenure_group", key="employees_tenure_grouped"))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="departments"))
@@ -93,18 +98,17 @@ def merge_department_names(**kwargs):
         on='DepartmentID', how='left'
     )
     
-    
     df_employees.fillna("", inplace=True)
+    #Displaying Fields
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 1000)
     print(df_employees)
     ti.xcom_push(key="employees_final", value=df_employees.to_dict(orient='records'))
     
 def create_bigquery_table():
+    #Creating BigQuery Table
     bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
-    
     client = bq_hook.get_client()
-    
     dataset_ref = client.dataset(bigquery_dataset_id,project=bigquery_project_id)
     table_ref = dataset_ref.table(bigquery_table_id)
 
@@ -144,6 +148,7 @@ def create_bigquery_table():
         print("Table created successfully.")
     
 def upload_to_bigquery(**kwargs):
+    #Uploading to BigQuery
     ti = kwargs['ti']
     df_final = pd.DataFrame(ti.xcom_pull(task_ids="merge_department_names", key="employees_final")) 
     
@@ -169,6 +174,7 @@ def upload_to_bigquery(**kwargs):
 
     
 
+# Defining the DAG
 default_args = {
     'owner': 'aiwin_manuel',
     'retries': 0,
@@ -246,4 +252,4 @@ with DAG(
     
     
 extract_task >> standardize_gender_task >> calculate_age_task >> categorize_age_group_task >> calculate_tenure_task >> categorize_tenure_task >> count_department_task >> merge_department_task >> create_table_task  >> upload_to_bigquery_task
-        
+
