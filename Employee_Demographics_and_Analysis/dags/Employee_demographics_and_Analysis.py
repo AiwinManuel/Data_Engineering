@@ -252,4 +252,4 @@ with DAG(
     
     
 extract_task >> standardize_gender_task >> calculate_age_task >> categorize_age_group_task >> calculate_tenure_task >> categorize_tenure_task >> count_department_task >> merge_department_task >> create_table_task  >> upload_to_bigquery_task
-        
+
