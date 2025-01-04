@@ -41,6 +41,7 @@ def standarize_gender_values(**kwargs):
     ti.xcom_push(key="employees_standardized", value=df_employees.to_dict(orient='records'))
 
 def calculate_age(**kwargs):
+    #Calculating Age
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="standardize_gender", key="employees_standardized"))
     current_year = datetime.now().year
