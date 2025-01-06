@@ -30,6 +30,14 @@ def extract_data(**kwargs):
     kwargs['ti'].xcom_push(key='employee', value=df_employee.to_dict(orient="records"))
     kwargs['ti'].xcom_push(key='performance_reviews',value=df_performance_reviews.to_dict(orient="records"))
     kwargs['ti'].xcom_push(key='salary_history',value=df_salary_history.to_dict(orient="records"))
+    
+
+def currrency_conversion(**kwargs):
+    ti = kwargs['ti']
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='salary_history'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='employee'))
+    df_employee['Salary'] = df_employee['Salary'].replace('[\$,]', '', regex=True)
+
 
 default_args = {
     "owner":"aiwinmanuel",
@@ -52,7 +60,12 @@ with DAG(
         python_callable = extract_data
     )
     
+    coverting_currency_task = PythonOperator(
+        task_id = "currency_converstion",
+        python_callable=currrency_conversion
+    )
     
     
-    extracting_task
+    
+    extracting_task >> coverting_currency_task
     
