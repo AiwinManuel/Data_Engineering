@@ -15,7 +15,7 @@ performance_reviews_table_key = 'Company_Employee_Details/performance_reviews.cs
 employee_table_key = 'Company_Employee_Details/employee.csv'
 
 
-def extract_data():
+def extract_data(**kwargs):
     
     hook = S3Hook(aws_conn_id=aws_connection_id)
     salary_history_data =hook.read_key(salary_history_table_key,bucket_name=aws_bucket_name)
@@ -27,7 +27,9 @@ def extract_data():
     employee_data = hook.read_key(employee_table_key, bucket_name=aws_bucket_name)
     df_employee = pd.read_csv(io.StringIO(employee_data))
     
-    
+    kwargs['ti'].xcom_push(key='employee', value=df_employee.to_dict(orient="records"))
+    kwargs['ti'].xcom_push(key='performance_reviews',value=df_performance_reviews.to_dict(orient="records"))
+    kwargs['ti'].xcom_push(key='salary_history',value=df_salary_history.to_dict(orient="records"))
 
 default_args = {
     "owner":"aiwinmanuel",
@@ -49,6 +51,8 @@ with DAG(
         task_id = "extracting_data",
         python_callable = extract_data
     )
+    
+    
     
     extracting_task
     
