@@ -22,7 +22,7 @@ bigquery_table_id = 'employees_final'
 
 def data_extractions(**kwargs):
         #Fetching Employees Table
-        hook = S3Hook(aws_conn_id='s3_connection')
+        hook = S3Hook(aws_conn_id='aws_connection')
         employeeTable = hook.read_key(employees_table_key,bucket_name=s3_bucket_name)
         df_employees = pd.read_csv(io.StringIO(employeeTable))
         
@@ -107,7 +107,7 @@ def merge_department_names(**kwargs):
     
 def create_bigquery_table():
     #Creating BigQuery Table
-    bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
+    bq_hook = BigQueryHook(gcp_conn_id="gcp_connection", use_legacy_sql=False)
     client = bq_hook.get_client()
     dataset_ref = client.dataset(bigquery_dataset_id,project=bigquery_project_id)
     table_ref = dataset_ref.table(bigquery_table_id)
@@ -160,7 +160,7 @@ def upload_to_bigquery(**kwargs):
     ] 
     df_final = df_final[expected_columns]
     df_final["Salary"] = pd.to_numeric(df_final["Salary"], errors="coerce")
-    bq_hook = BigQueryHook(gcp_conn_id="google_cloud_connection", use_legacy_sql=False)
+    bq_hook = BigQueryHook(gcp_conn_id="gcp_connection", use_legacy_sql=False)
     client = bq_hook.get_client()
     table_ref = client.dataset(bigquery_dataset_id, project=bigquery_project_id).table(bigquery_table_id)
     rows_to_insert = df_final.to_dict(orient="records")
