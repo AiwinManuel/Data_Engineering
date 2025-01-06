@@ -96,7 +96,7 @@ def merge_department_names(**kwargs):
     df_departments = df_departments.drop(columns=["Location"], errors="ignore")
 
     df_employees = df_employees.merge(
-        df_departments[['DepartmentID', 'DepartmentName', 'DepartmentManagerID', 'Budget', 'Location', 'EstablishedDate']], 
+        df_departments[['DepartmentID', 'DepartmentName', 'DepartmentManagerID', 'Budget', 'EstablishedDate']], 
         on='DepartmentID', how='left'
     )
     
