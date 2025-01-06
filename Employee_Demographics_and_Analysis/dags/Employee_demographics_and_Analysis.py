@@ -79,7 +79,7 @@ def categorize_tenure_group(**kwargs):
 
 
 def count_employees_per_department(**kwargs):
-    #Count the number of employees per department
+    #Counting the number of employees per department
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="employees"))
     department_size = df_employees.groupby('DepartmentID')['EmployeeID'].count().reset_index()
@@ -87,7 +87,7 @@ def count_employees_per_department(**kwargs):
     ti.xcom_push(key="department_size", value=department_size.to_dict(orient='records'))
 
 def merge_department_names(**kwargs):
-    #Merge department names with the employee data
+    #Merging department names with the employee data
     ti = kwargs['ti']
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_tenure_group", key="employees_tenure_grouped"))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="departments"))
