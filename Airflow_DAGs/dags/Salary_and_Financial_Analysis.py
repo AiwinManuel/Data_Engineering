@@ -1,12 +1,33 @@
 from airflow.models import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+import pandas as pd
+import io
 
 
+
+
+aws_connection_id = "aws_connection"
+aws_bucket_name = "aiwins"
+salary_history_table_key = "Company_Employee_Details/salary_history.csv"
+performance_reviews_table_key = 'Company_Employee_Details/performance_reviews.csv'
+employee_table_key = 'Company_Employee_Details/employee.csv'
 
 
 def extract_data():
-    pass
+    
+    hook = S3Hook(aws_conn_id=aws_connection_id)
+    salary_history_data =hook.read_key(salary_history_table_key,bucket_name=aws_bucket_name)
+    df_salary_history = pd.read_csv(io.StringIO(salary_history_data))
+    
+    performance_reviews_data = hook.read_key(performance_reviews_table_key, bucket_name=aws_bucket_name)
+    df_performance_reviews = pd.read_csv(io.StringIO(performance_reviews_data))
+    
+    employee_data = hook.read_key(employee_table_key, bucket_name=aws_bucket_name)
+    df_employee = pd.read_csv(io.StringIO(employee_data))
+    
+    
 
 default_args = {
     "owner":"aiwinmanuel",
