@@ -14,11 +14,21 @@ random.seed(45)
 def generate_uuid():
     return str(uuid.uuid4())
 
+
+# Defining cities by country
+cities_by_country = {
+    "India": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune"],
+    "USA": ["New York", "Los Angeles", "Chicago", "Houston", "San Francisco", "Boston", "Seattle"],
+    "Canada": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg"],
+    "Australia": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Canberra", "Hobart"]
+}
+
 # Generating Enployees Table
 
 def generate_employees(num_employees):
     employees=[]
     for _ in range(num_employees):
+        country = random.choice(list(cities_by_country.keys())) 
         employees.append({
             'EmployeeID': generate_uuid(),
             'FirstName': faker.first_name(),
@@ -34,6 +44,7 @@ def generate_employees(num_employees):
             "PhoneNumber": faker.phone_number(),
             "ManagerID": random.choice([None] + [str(uuid.uuid4()) for _ in range(10)]),
             "EmploymentType": random.choice(["Full-Time", "Part-Time", "Contract"]),
+            "Location": country,  
             
         })
     return pd.DataFrame(employees)
@@ -249,7 +260,7 @@ projects_df = generate_projects(50)
 project_assignments_df = generate_project_assignments(200, employees_df["EmployeeID"].tolist(), projects_df["ProjectID"].tolist())
 
 
-# Saving to CSV files
+# # Saving to CSV files
 employees_df.to_csv("employees.csv", index=False)
 departments_df.to_csv("departments.csv", index=False)
 positions_df.to_csv("positions.csv", index=False)

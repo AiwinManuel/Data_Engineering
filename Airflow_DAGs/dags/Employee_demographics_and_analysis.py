@@ -92,6 +92,8 @@ def merge_department_names(**kwargs):
     df_employees = pd.DataFrame(ti.xcom_pull(task_ids="categorize_tenure_group", key="employees_tenure_grouped"))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids="extract_data", key="departments"))
     df_departments.rename(columns={"ManagerID": "DepartmentManagerID"}, inplace=True)
+    
+    df_departments = df_departments.drop(columns=["Location"], errors="ignore")
 
     df_employees = df_employees.merge(
         df_departments[['DepartmentID', 'DepartmentName', 'DepartmentManagerID', 'Budget', 'Location', 'EstablishedDate']], 
