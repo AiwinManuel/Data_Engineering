@@ -84,6 +84,7 @@ def generate_positions(num_positions):
 def generate_salary_history(num_records, employee_ids=None):
     salary_history = []
     for _ in range(num_records):
+        country = random.choice(list(cities_by_country.keys())) 
         emp_id = random.choice(employee_ids)
         prev_salary = random.randint(40000, 100000)
         updated_salary = prev_salary + random.randint(1000, 10000)
@@ -94,6 +95,7 @@ def generate_salary_history(num_records, employee_ids=None):
             "UpdatedSalary": updated_salary,
             "EffectiveDate": faker.date_between(start_date='-5y', end_date='today'),
             "ChangeReason": random.choice(["Promotion", "Annual Raise", "Adjustment"]),
+            "Location": country,
         })
     return pd.DataFrame(salary_history)
 

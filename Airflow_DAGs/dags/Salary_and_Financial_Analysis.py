@@ -15,6 +15,15 @@ performance_reviews_table_key = 'Company_Employee_Details/performance_reviews.cs
 employee_table_key = 'Company_Employee_Details/employee.csv'
 
 
+
+exchange_rates = {
+    'India': 0.012,      # 1 INR ≈ 0.012 USD
+    'USA': 1.0,          # 1 USD = 1 USD
+    'Australia': 0.65,   # 1 AUD ≈ 0.65 USD
+    'Canada': 0.75       # 1 CAD ≈ 0.75 USD
+}
+
+
 def extract_data(**kwargs):
     
     hook = S3Hook(aws_conn_id=aws_connection_id)
@@ -33,10 +42,17 @@ def extract_data(**kwargs):
     
 
 def currrency_conversion(**kwargs):
+    
     ti = kwargs['ti']
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='salary_history'))
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='employee'))
-    df_employee['Salary'] = df_employee['Salary'].replace('[\$,]', '', regex=True)
+    
+    df_employee['ExchangeRate'] = df_employee['Location'].map(exchange_rates)
+    df_employee['ExchangeRate'] = df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
+    
+    df_salary_history['ExchangeRate'] = df_salary_history['Location'].map(exchange_rates)
+    df_salary_history['PreviousSalaryUSD'] = df_salary_history['PreviousSalary'] * df_salary_history['ExchangeRate']  
+    df_salary_history['UpdatedSalaryUSD'] = df_salary_history['UpdatedSalary'] * df_salary_history['ExchangeRate']
 
 
 default_args = {
