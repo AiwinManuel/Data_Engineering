@@ -12,7 +12,7 @@ aws_connection_id = "aws_connection"
 aws_bucket_name = "aiwins"
 salary_history_table_key = "Company_Employee_Details/salary_history.csv"
 performance_reviews_table_key = 'Company_Employee_Details/performance_reviews.csv'
-employee_table_key = 'Company_Employee_Details/employee.csv'
+employee_table_key = 'Company_Employee_Details/employees.csv'
 
 
 
