@@ -48,12 +48,14 @@ def currrency_conversion(**kwargs):
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='employee'))
     
     df_employee['ExchangeRate'] = df_employee['Location'].map(exchange_rates)
-    df_employee['ExchangeRate'] = df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
+    df_employee['SalaryUSD'] = df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
     
     df_salary_history['ExchangeRate'] = df_salary_history['Location'].map(exchange_rates)
     df_salary_history['PreviousSalaryUSD'] = df_salary_history['PreviousSalary'] * df_salary_history['ExchangeRate']  
     df_salary_history['UpdatedSalaryUSD'] = df_salary_history['UpdatedSalary'] * df_salary_history['ExchangeRate']
 
+    ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient="record"))
+    ti.xcom_push(key='employee', value = df_employee.to_dict(orient="record"))
 
 default_args = {
     "owner":"aiwinmanuel",
