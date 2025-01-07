@@ -97,8 +97,13 @@ with DAG(
         python_callable=currrency_conversion
     )
     
+    date_formatting_task = PythonOperator(
+        task_id = "date_formatting",
+        python_callable=dateFormat
+    )
     
     
     
-    extracting_task >> coverting_currency_task
+    
+    extracting_task >> coverting_currency_task >> date_formatting_task
     
