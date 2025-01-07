@@ -12,7 +12,7 @@ aws_connection_id = "aws_connection"
 aws_bucket_name = "aiwins"
 salary_history_table_key = "Company_Employee_Details/salary_history.csv"
 performance_reviews_table_key = 'Company_Employee_Details/performance_reviews.csv'
-employee_table_key = 'Company_Employee_Details/employee.csv'
+employee_table_key = 'Company_Employee_Details/employees.csv'
 
 
 
@@ -36,9 +36,9 @@ def extract_data(**kwargs):
     employee_data = hook.read_key(employee_table_key, bucket_name=aws_bucket_name)
     df_employee = pd.read_csv(io.StringIO(employee_data))
     
-    kwargs['ti'].xcom_push(key='employee', value=df_employee.to_dict(orient="records"))
-    kwargs['ti'].xcom_push(key='performance_reviews',value=df_performance_reviews.to_dict(orient="records"))
-    kwargs['ti'].xcom_push(key='salary_history',value=df_salary_history.to_dict(orient="records"))
+    kwargs['ti'].xcom_push(key='employee', value=df_employee.to_dict(orient='records'))
+    kwargs['ti'].xcom_push(key='performance_reviews',value=df_performance_reviews.to_dict(orient='records'))
+    kwargs['ti'].xcom_push(key='salary_history',value=df_salary_history.to_dict(orient='records'))
     
 
 def currrency_conversion(**kwargs):
@@ -54,18 +54,22 @@ def currrency_conversion(**kwargs):
     df_salary_history['PreviousSalaryUSD'] = df_salary_history['PreviousSalary'] * df_salary_history['ExchangeRate']  
     df_salary_history['UpdatedSalaryUSD'] = df_salary_history['UpdatedSalary'] * df_salary_history['ExchangeRate']
 
-    ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient="record"))
-    ti.xcom_push(key='employee', value = df_employee.to_dict(orient="record"))
+    ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient="records"))
+    ti.xcom_push(key='employee', value = df_employee.to_dict(orient="records"))
     
 def dateFormat(**kwargs):
     ti = kwargs['ti']
-    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='currency_converstion',key='salary_history'))
-    df_employee = pd.DataFrame(ti.xcom_pull(task_ids='currency_converstion',key='employee'))
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='currency_conversion',key='salary_history'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids='currency_conversion',key='employee'))
+    print("Columns in df_employee:", df_employee.columns)
+
+    df_employee['HireDate'] = pd.to_datetime(df_employee['HireDate'], format='%Y-%m-%d', errors='coerce')
+    df_employee['DateOfBirth'] = pd.to_datetime(df_employee['DateOfBirth'],format='%Y-%m-%d', errors='coerce')
     
-    df_employee['HireDate'] = pd.to_datetime(df_employee,format='%Y-%m-%d', errors='coerce')
-    df_employee['DateOfBirth'] = pd.to_datetime(df_employee,format='%Y-%m-%d', errors='coerce')
-    
-    df_salary_history['EffectiveDate'] = pd.to_datetime(df_salary_history,format='%Y-%m-%d', errors='coerce')
+    df_salary_history['EffectiveDate'] = pd.to_datetime(df_salary_history['EffectiveDate'],format='%Y-%m-%d', errors='coerce')
+    df_employee['HireDate'] = df_employee['HireDate'].dt.strftime('%Y-%m-%d')
+    df_employee['DateOfBirth'] = df_employee['DateOfBirth'].dt.strftime('%Y-%m-%d')
+    df_salary_history['EffectiveDate'] = df_salary_history['EffectiveDate'].dt.strftime('%Y-%m-%d')
     
     ti.xcom_push(key='employee',value = df_employee.to_dict(orient='records'))
     ti.xcom_push(key='salary_history',value = df_salary_history.to_dict(orient='records'))
@@ -93,7 +97,7 @@ with DAG(
     )
     
     coverting_currency_task = PythonOperator(
-        task_id = "currency_converstion",
+        task_id = "currency_conversion",
         python_callable=currrency_conversion
     )
     
