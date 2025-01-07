@@ -50,7 +50,9 @@ def currrency_conversion(**kwargs):
     df_employee['ExchangeRate'] = df_employee['Location'].map(exchange_rates)
     df_employee['ExchangeRate'] = df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
     
-    df_employee['Salary'] = df_employee['Salary'].replace('[\$,]', '', regex=True)
+    df_salary_history['ExchangeRate'] = df_salary_history['Location'].map(exchange_rates)
+    df_salary_history['PreviousSalaryUSD'] = df_salary_history['PreviousSalary'] * df_salary_history['ExchangeRate']  
+    df_salary_history['UpdatedSalaryUSD'] = df_salary_history['UpdatedSalary'] * df_salary_history['ExchangeRate']
 
 
 default_args = {
