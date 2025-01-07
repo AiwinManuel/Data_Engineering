@@ -61,11 +61,15 @@ def dateFormat(**kwargs):
     ti = kwargs['ti']
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='currency_conversion',key='salary_history'))
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids='currency_conversion',key='employee'))
-    
-    df_employee['HireDate'] = pd.to_datetime(df_employee['HireDate'],format='%Y-%m-%d', errors='coerce')
+    print("Columns in df_employee:", df_employee.columns)
+
+    df_employee['HireDate'] = pd.to_datetime(df_employee['HireDate'], format='%Y-%m-%d', errors='coerce')
     df_employee['DateOfBirth'] = pd.to_datetime(df_employee['DateOfBirth'],format='%Y-%m-%d', errors='coerce')
     
     df_salary_history['EffectiveDate'] = pd.to_datetime(df_salary_history['EffectiveDate'],format='%Y-%m-%d', errors='coerce')
+    df_employee['HireDate'] = df_employee['HireDate'].dt.strftime('%Y-%m-%d')
+    df_employee['DateOfBirth'] = df_employee['DateOfBirth'].dt.strftime('%Y-%m-%d')
+    df_salary_history['EffectiveDate'] = df_salary_history['EffectiveDate'].dt.strftime('%Y-%m-%d')
     
     ti.xcom_push(key='employee',value = df_employee.to_dict(orient='records'))
     ti.xcom_push(key='salary_history',value = df_salary_history.to_dict(orient='records'))
@@ -93,7 +97,7 @@ with DAG(
     )
     
     coverting_currency_task = PythonOperator(
-        task_id = "currency_converstion",
+        task_id = "currency_conversion",
         python_callable=currrency_conversion
     )
     
