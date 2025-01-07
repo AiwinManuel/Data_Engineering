@@ -56,6 +56,20 @@ def currrency_conversion(**kwargs):
 
     ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient="record"))
     ti.xcom_push(key='employee', value = df_employee.to_dict(orient="record"))
+    
+def dateFormat(**kwargs):
+    ti = kwargs['ti']
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='currency_converstion',key='salary_history'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids='currency_converstion',key='employee'))
+    
+    df_employee['HireDate'] = pd.to_datetime(df_employee,format='%Y-%m-%d', errors='coerce')
+    df_employee['DateOfBirth'] = pd.to_datetime(df_employee,format='%Y-%m-%d', errors='coerce')
+    
+    df_salary_history['EffectiveDate'] = pd.to_datetime(df_salary_history,format='%Y-%m-%d', errors='coerce')
+    
+    ti.xcom_push(key='employee',value = df_employee.to_dict(orient='records'))
+    ti.xcom_push(key='salary_history',value = df_salary_history.to_dict(orient='records'))
+    
 
 default_args = {
     "owner":"aiwinmanuel",
@@ -82,6 +96,7 @@ with DAG(
         task_id = "currency_converstion",
         python_callable=currrency_conversion
     )
+    
     
     
     
