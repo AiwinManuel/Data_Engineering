@@ -82,6 +82,9 @@ def salaryBand(**kwargs):
     
     ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient='records'))
     
+def average_salary(**kwargs):
+    ti=kwargs['ti']
+    df_employee = pd.DataFrame(ti.xcom_pull(task_id='date_formatting',key='employee'))
     
     
 

@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  scheduler:
+    volumes:
+      - /Users/aiwin/Documents/Projects/aws_redshift/Data_Generation/Company_Employee_Details:/usr/local/airflow/data:z
+  webserver:
+    volumes:
+      - /Users/aiwin/Documents/Projects/aws_redshift/Data_Generation/Company_Employee_Details:/usr/local/airflow/data:z
