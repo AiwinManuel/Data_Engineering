@@ -73,6 +73,16 @@ def dateFormat(**kwargs):
     
     ti.xcom_push(key='employee',value = df_employee.to_dict(orient='records'))
     ti.xcom_push(key='salary_history',value = df_salary_history.to_dict(orient='records'))
+
+def salaryBand(**kwargs):
+    ti = kwargs['ti']
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='date_formatting',key='salary_history'))
+    
+    df_salary_history['SalaryBand'] = pd.cut(df_salary_history['UpdatedSalaryUSD'], bins=[0, 50000, 100000, 150000, 200000, 250000], labels=['Low', 'Medium', 'Above Medium', 'High', 'Very High'])
+    
+    ti.xcom_push(key='salary_history', value = df_salary_history.to_dict(orient='records'))
+    
+    
     
 
 default_args = {
@@ -106,8 +116,13 @@ with DAG(
         python_callable=dateFormat
     )
     
+    salary_band_task = PythonOperator(
+        task_id = "salary_band",
+        python_callable=salaryBand
+    )
     
     
     
-    extracting_task >> coverting_currency_task >> date_formatting_task
+    
+    extracting_task >> coverting_currency_task >> date_formatting_task >> salary_band_task
     
