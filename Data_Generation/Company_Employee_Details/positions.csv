@@ -1,21 +1,21 @@
 PositionID,PositionTitle,MinSalary,MaxSalary,DepartmentID,SeniorityLevel
-1,Insurance broker,37325,87948,7,Junior
-2,Osteopath,35555,83154,9,Mid
-3,Consulting civil engineer,42367,70074,10,Junior
-4,Photographer,37554,87128,8,Senior
-5,Podiatrist,41666,107262,2,Mid
-6,Landscape architect,32209,72733,5,Junior
-7,"Therapist, art",36613,72906,7,Mid
-8,Diagnostic radiographer,33133,87101,10,Junior
-9,"Engineer, production",31281,84277,8,Mid
-10,Textile designer,37883,116233,4,Mid
-11,"Journalist, magazine",40827,108238,7,Senior
-12,Operations geologist,45227,80831,7,Senior
-13,Toxicologist,32911,80561,9,Senior
-14,"Designer, blown glass/stained glass",49347,86107,7,Junior
-15,Marketing executive,32149,92593,10,Senior
-16,Accounting technician,30343,107392,6,Junior
-17,Commercial horticulturist,36405,89764,5,Senior
-18,"Scientist, research (physical sciences)",36357,74355,10,Senior
-19,Armed forces operational officer,31785,72869,5,Mid
-20,Trade union research officer,35016,76733,3,Junior
+1,Chief Strategy Officer,36469,71853,9,Mid
+2,Drilling engineer,42211,100484,3,Senior
+3,Land,43370,74339,7,Junior
+4,"Surveyor, rural practice",39367,91113,7,Senior
+5,Herpetologist,32472,87139,7,Senior
+6,Outdoor activities/education manager,36811,88600,4,Senior
+7,Chief Marketing Officer,48736,75116,5,Junior
+8,Lawyer,35530,111651,9,Senior
+9,Chief Marketing Officer,43760,92988,9,Junior
+10,Wellsite geologist,44747,74490,6,Mid
+11,"Research officer, trade union",38923,105040,10,Mid
+12,Toxicologist,35224,111350,7,Junior
+13,Chartered loss adjuster,37575,112537,1,Senior
+14,"Nurse, children's",34413,115296,3,Junior
+15,Print production planner,31997,87427,3,Senior
+16,Historic buildings inspector/conservation officer,42235,108907,3,Senior
+17,Consulting civil engineer,34607,103741,7,Mid
+18,IT trainer,36592,79138,2,Junior
+19,IT technical support officer,47330,70907,7,Junior
+20,Computer games developer,44636,91462,8,Mid

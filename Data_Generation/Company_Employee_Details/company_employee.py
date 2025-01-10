@@ -27,10 +27,13 @@ cities_by_country = {
 
 def generate_employees(num_employees):
     employees=[]
+    employee_ids = []
     for _ in range(num_employees):
+        emp_id = generate_uuid()
+        employee_ids.append(emp_id)
         country = random.choice(list(cities_by_country.keys())) 
         employees.append({
-            'EmployeeID': generate_uuid(),
+            'EmployeeID': emp_id,
             'FirstName': faker.first_name(),
             'LastName': faker.last_name(),
             "Gender": random.choice(["Male", "Female", "Other"]),
@@ -47,7 +50,7 @@ def generate_employees(num_employees):
             "Location": country,  
             
         })
-    return pd.DataFrame(employees)
+    return pd.DataFrame(employees) , employee_ids
 
 
 # Generating Departments Table
@@ -81,143 +84,157 @@ def generate_positions(num_positions):
 
 
 # Generating Salary History Table
-def generate_salary_history(num_records, employee_ids=None):
+def generate_salary_history(num_records, employees):
     salary_history = []
-    for _ in range(num_records):
+    for emp_id in employees:
         country = random.choice(list(cities_by_country.keys())) 
-        emp_id = random.choice(employee_ids)
-        prev_salary = random.randint(40000, 100000)
-        updated_salary = prev_salary + random.randint(1000, 10000)
-        salary_history.append({
-            "SalaryHistoryID": str(uuid.uuid4()),
-            "EmployeeID": emp_id,
-            "PreviousSalary": prev_salary,
-            "UpdatedSalary": updated_salary,
-            "EffectiveDate": faker.date_between(start_date='-5y', end_date='today'),
-            "ChangeReason": random.choice(["Promotion", "Annual Raise", "Adjustment"]),
-            "Location": country,
-        })
+        for _ in range(num_records):
+            prev_salary = random.randint(40000, 100000)
+            updated_salary = prev_salary + random.randint(1000, 10000)
+            salary_history.append({
+                "SalaryHistoryID": str(uuid.uuid4()),
+                "EmployeeID": emp_id,
+                "PreviousSalary": prev_salary,
+                "UpdatedSalary": updated_salary,
+                "EffectiveDate": faker.date_between(start_date='-5y', end_date='today'),
+                "ChangeReason": random.choice(["Promotion", "Annual Raise", "Adjustment"]),
+                "Location": country,
+            })
+            break
     return pd.DataFrame(salary_history)
 
 
 # Generating Performance Reviews Table
-def generate_performance_reviews(num_reviews=200, employee_ids=None):
+def generate_performance_reviews(num_reviews, employee_ids):
     reviews = []
-    for _ in range(num_reviews):
-        reviews.append({
-            "ReviewID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "ReviewDate": faker.date_between(start_date='-3y', end_date='today'),
-            "ReviewerID": random.choice(employee_ids),
-            "Score": random.randint(1, 10),
-            "Comments": faker.sentence(),
-            "PromotionRecommendation": random.choice(["Yes", "No"]),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_reviews):
+            reviews.append({
+                "ReviewID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "ReviewDate": faker.date_between(start_date='-3y', end_date='today'),
+                "ReviewerID": random.choice(employee_ids),
+                "Score": random.randint(1, 10),
+                "Comments": faker.sentence(),
+                "PromotionRecommendation": random.choice(["Yes", "No"]),
+            })
+            break
     return pd.DataFrame(reviews)
 
 
 
 # Generating Leave Records Table
-def generate_leave_records(num_leaves=200, employee_ids=None):
+def generate_leave_records(num_leaves, employee_ids):
     leave_records = []
-    for _ in range(num_leaves):
-        start_date = faker.date_between(start_date='-2y', end_date='today')
-        end_date = faker.date_between(start_date=start_date, end_date=start_date + pd.Timedelta(days=10))
-        leave_records.append({
-            "LeaveID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "LeaveType": random.choice(["Sick Leave", "Vacation", "Unpaid Leave"]),
-            "StartDate": start_date,
-            "EndDate": end_date,
-            "ApprovalStatus": random.choice(["Approved", "Pending", "Denied"]),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_leaves):
+            start_date = faker.date_between(start_date='-2y', end_date='today')
+            end_date = faker.date_between(start_date=start_date, end_date=start_date + pd.Timedelta(days=10))
+            leave_records.append({
+                "LeaveID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "LeaveType": random.choice(["Sick Leave", "Vacation", "Unpaid Leave"]),
+                "StartDate": start_date,
+                "EndDate": end_date,
+                "ApprovalStatus": random.choice(["Approved", "Pending", "Denied"]),
+            })
     return pd.DataFrame(leave_records)
 
 
 
 # Generating Attendance Records Table
-def generate_attendance(num_records=1000, employee_ids=None):
+def generate_attendance(num_records, employee_ids):
     attendance = []
-    for _ in range(num_records):
-        date = faker.date_between(start_date='-1y', end_date='today')
-        check_in = faker.time(pattern='%H:%M:%S', end_datetime=None)
-        check_out = faker.time(pattern='%H:%M:%S', end_datetime=None)
-        attendance.append({
-            "AttendanceID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "Date": date,
-            "CheckInTime": check_in,
-            "CheckOutTime": check_out,
-            "HoursWorked": random.randint(4, 8),
-            "WorkLocation": random.choice(["Office", "Remote"]),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_records):
+            date = faker.date_between(start_date='-1y', end_date='today')
+            check_in = faker.time(pattern='%H:%M:%S', end_datetime=None)
+            check_out = faker.time(pattern='%H:%M:%S', end_datetime=None)
+            attendance.append({
+                "AttendanceID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "Date": date,
+                "CheckInTime": check_in,
+                "CheckOutTime": check_out,
+                "HoursWorked": random.randint(4, 8),
+                "WorkLocation": random.choice(["Office", "Remote"]),
+            })
+            break
     return pd.DataFrame(attendance)
 
 
 # Generating Training Data Table
-def generate_training_data(num_trainings=100, employee_ids=None):
+def generate_training_data(num_trainings, employee_ids):
     training_data = []
-    for _ in range(num_trainings):
-        training_data.append({
-            "TrainingID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "TrainingTitle": faker.catch_phrase(),
-            "TrainingDate": faker.date_between(start_date='-2y', end_date='today'),
-            "DurationHours": random.randint(4, 40),
-            "Cost": random.randint(500, 5000),
-            "Certification": random.choice(["Yes", "No"]),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_trainings):
+            training_data.append({
+                "TrainingID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "TrainingTitle": faker.catch_phrase(),
+                "TrainingDate": faker.date_between(start_date='-2y', end_date='today'),
+                "DurationHours": random.randint(4, 40),
+                "Cost": random.randint(500, 5000),
+                "Certification": random.choice(["Yes", "No"]),
+            })
+            break
     return pd.DataFrame(training_data)
 
 
 # Generating Payroll Data Table
-def generate_payroll_data(num_records=200, employee_ids=None):
+def generate_payroll_data(num_records, employee_ids):
     payroll = []
-    for _ in range(num_records):
-        payroll.append({
-            "PayrollID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "PayDate": faker.date_between(start_date='-1y', end_date='today'),
-            "GrossPay": random.randint(4000, 8000),
-            "Deductions": random.randint(500, 2000),
-            "NetPay": random.randint(3000, 6000),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_records):
+            payroll.append({
+                "PayrollID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "PayDate": faker.date_between(start_date='-1y', end_date='today'),
+                "GrossPay": random.randint(4000, 8000),
+                "Deductions": random.randint(500, 2000),
+                "NetPay": random.randint(3000, 6000),
+            })
+            break
     return pd.DataFrame(payroll)
 
 
 # Generating Benefits Data Table
-def generate_benefits_data(num_records=100, employee_ids=None):
+def generate_benefits_data(num_records, employee_ids):
     benefits = []
-    for _ in range(num_records):
-        benefits.append({
-            "BenefitID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "BenefitType": random.choice(["Health Insurance", "Retirement Plan", "Gym Membership"]),
-            "StartDate": faker.date_between(start_date='-5y', end_date='-1y'),
-            "EndDate": faker.date_between(start_date='-1y', end_date='today'),
-            "CostToCompany": random.randint(1000, 5000),
-            "ContributionByEmployee": random.randint(200, 1000),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_records):
+            benefits.append({
+                "BenefitID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "BenefitType": random.choice(["Health Insurance", "Retirement Plan", "Gym Membership"]),
+                "StartDate": faker.date_between(start_date='-5y', end_date='-1y'),
+                "EndDate": faker.date_between(start_date='-1y', end_date='today'),
+                "CostToCompany": random.randint(1000, 5000),
+                "ContributionByEmployee": random.randint(200, 1000),
+            })
+            break
     return pd.DataFrame(benefits)
 
 
 # Generating Resignations Data Table
-def generate_resignations(num_records=50, employee_ids=None):
+def generate_resignations(num_records, employee_ids):
     resignations = []
-    for _ in range(num_records):
-        resignations.append({
-            "TerminationID": generate_uuid(),
-            "EmployeeID": random.choice(employee_ids),
-            "LastWorkingDate": faker.date_between(start_date='-1y', end_date='today'),
-            "Reason": random.choice(["Voluntary Resignation", "Layoff", "Retirement"]),
-            "Feedback": faker.sentence(),
-            "SeverancePackage": random.randint(5000, 20000),
-        })
+    for emp_id in employee_ids:
+        for _ in range(num_records):
+            resignations.append({
+                "TerminationID": generate_uuid(),
+                "EmployeeID": emp_id,
+                "LastWorkingDate": faker.date_between(start_date='-1y', end_date='today'),
+                "Reason": random.choice(["Voluntary Resignation", "Layoff", "Retirement"]),
+                "Feedback": faker.sentence(),
+                "SeverancePackage": random.randint(5000, 20000),
+            })
+            break
     return pd.DataFrame(resignations)
 
 
 # Generating Projects Data
-def generate_projects(num_projects=50):
+def generate_projects(num_projects):
     projects = []
     for _ in range(num_projects):
         projects.append({
@@ -231,33 +248,35 @@ def generate_projects(num_projects=50):
     return pd.DataFrame(projects)
 
 # Generating Project Assignments Data
-def generate_project_assignments(num_assignments=200, employee_ids=None, project_ids=None):
+def generate_project_assignments(num_assignments, employee_ids, projects):
     assignments = []
-    for _ in range(num_assignments):
-        assignments.append({
-            "AssignmentID": generate_uuid(),
-            "ProjectID": random.choice(project_ids),
-            "EmployeeID": random.choice(employee_ids),
-            "StartDate": faker.date_between(start_date='-2y', end_date='-1y'),
-            "EndDate": faker.date_between(start_date='-1y', end_date='today'),
-            "Role": random.choice(["Lead", "Contributor", "Reviewer"]),
-            "HoursAllocated": random.randint(10, 100),
-        })
+    for emp_id in employee_ids:
+      for _ in range(num_assignments):
+            assignments.append({
+                "AssignmentID": generate_uuid(),
+                "ProjectID": random.choice(projects),
+                "EmployeeID": emp_id,
+                "StartDate": faker.date_between(start_date='-2y', end_date='-1y'),
+                "EndDate": faker.date_between(start_date='-1y', end_date='today'),
+                "Role": random.choice(["Lead", "Contributor", "Reviewer"]),
+                "HoursAllocated": random.randint(10, 100),
+            })
+            break
     return pd.DataFrame(assignments)
 
 # Generating Employee Projects Data
-num_employees = 100
-employees_df = generate_employees(num_employees)
+num_employees = 200
+employees_df, employee_ids = generate_employees(num_employees)
 departments_df = generate_departments(10)
 positions_df = generate_positions(20)
-salary_history_df = generate_salary_history(200, employees_df["EmployeeID"].tolist())
-performance_reviews_df = generate_performance_reviews(200, employees_df["EmployeeID"].tolist())
-leave_records_df = generate_leave_records(200, employees_df["EmployeeID"].tolist())
-attendance_df = generate_attendance(1000, employees_df["EmployeeID"].tolist())
-training_df = generate_training_data(100, employees_df["EmployeeID"].tolist())
-payroll_df = generate_payroll_data(200, employees_df["EmployeeID"].tolist())
-benefits_df = generate_benefits_data(100, employees_df["EmployeeID"].tolist())
-resignations_df = generate_resignations(50, employees_df["EmployeeID"].tolist())
+salary_history_df = generate_salary_history(200, employee_ids)
+performance_reviews_df = generate_performance_reviews(200, employee_ids)
+leave_records_df = generate_leave_records(200, employee_ids)
+attendance_df = generate_attendance(1000,  employee_ids)
+training_df = generate_training_data(100, employee_ids)
+payroll_df = generate_payroll_data(200, employee_ids)
+benefits_df = generate_benefits_data(100, employee_ids)
+resignations_df = generate_resignations(50, employee_ids)
 projects_df = generate_projects(50)
 project_assignments_df = generate_project_assignments(200, employees_df["EmployeeID"].tolist(), projects_df["ProjectID"].tolist())
 
