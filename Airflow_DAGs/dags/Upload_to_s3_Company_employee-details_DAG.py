@@ -19,12 +19,12 @@ defualt_args = {
     
 }
 
-with DAG (
+with DAG(
     "upload_to_s3",
-    default_args=defualt_args
+    default_args=defualt_args,
     tags = "S3 upload company employee details",
     catchup= False,
-    description="uploading company employee details to s3 bucket"
+    description="uploading company employee details to s3 bucket",
     schedule_interval=None,
     ) as dag:
     
@@ -32,4 +32,5 @@ with DAG (
         task_id = "uploadtos3",
         python_callable=uploadtos3
     )
+    
     
