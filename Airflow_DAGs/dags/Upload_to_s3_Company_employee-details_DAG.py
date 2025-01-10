@@ -8,7 +8,7 @@ import os
 
 aws_connection_id = 'aws_connection'
 bucket_name = 'aiwins'
-local_directory = "/Users/aiwin/Documents/Projects/aws_redshift/Data_Generation/Company_Employee_Details"
+local_directory = "/usr/local/airflow/data"
 
 def uploadtos3():
     hook = S3Hook(aws_conn_id=aws_connection_id)

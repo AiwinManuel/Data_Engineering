@@ -1,0 +1,127 @@
+version: '3.4'
+
+x-common-env-vars: &common-env-vars
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql://postgres:postgres@postgres:5432
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql://postgres:postgres@postgres:5432
+  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__FERNET_KEY: "d6Vefz3G9U_ynXB3cr7y_Ak35tAHkEGAVxuz_B-jzWw="
+  AIRFLOW__WEBSERVER__SECRET_KEY: "airflow-da-gs_0736db"
+  AIRFLOW__WEBSERVER__RBAC: "True"
+  AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
+  ASTRONOMER_ENVIRONMENT: local
+
+networks:
+  airflow:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  airflow_logs:
+    driver: local
+
+services:
+  postgres:
+    image: docker.io/postgres:12.6
+    restart: unless-stopped
+    networks:
+      - airflow
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      
+      - postgres_data:/var/lib/postgresql/data
+      
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  scheduler:
+    image: airflow-da-gs_0736db/airflow:latest
+    command: >
+      bash -c "(airflow db upgrade || airflow upgradedb) && airflow scheduler"
+    restart: unless-stopped
+    networks:
+      - airflow
+    user: astro
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+      io.astronomer.docker.component: "airflow-scheduler"
+    depends_on:
+      - postgres
+    environment: *common-env-vars
+    volumes:
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/dags:/usr/local/airflow/dags:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/plugins:/usr/local/airflow/plugins:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/include:/usr/local/airflow/include:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/tests:/usr/local/airflow/tests:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Data_Generation/Company_Employee_Details:/usr/local/airflow/data:z
+
+
+      
+      - airflow_logs:/usr/local/airflow/logs
+      
+    
+
+  webserver:
+    image: airflow-da-gs_0736db/airflow:latest
+    command: >
+      bash -c 'if [[ -z "$$AIRFLOW__API__AUTH_BACKEND" ]] && [[ $$(pip show -f apache-airflow | grep basic_auth.py) ]];
+        then export AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic_auth ;
+        else export AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.default ; fi &&
+        { airflow users create "$$@" || airflow create_user "$$@" ; } &&
+        { airflow sync-perm || airflow sync_perm ;} &&
+        airflow webserver' -- -r Admin -u admin -e admin@example.com -f admin -l user -p admin
+    restart: unless-stopped
+    networks:
+      - airflow
+    user: astro
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+      io.astronomer.docker.component: "airflow-webserver"
+    depends_on:
+      - scheduler
+      - postgres
+    environment: *common-env-vars
+    ports:
+      - 127.0.0.1:8080:8080
+    volumes:
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/dags:/usr/local/airflow/dags:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/plugins:/usr/local/airflow/plugins:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/include:/usr/local/airflow/include:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/tests:/usr/local/airflow/tests:z
+      
+      - airflow_logs:/usr/local/airflow/logs
+      
+    
+
+  triggerer:
+    image: airflow-da-gs_0736db/airflow:latest
+    command: >
+      bash -c "(airflow db upgrade || airflow upgradedb) && airflow triggerer"
+    restart: unless-stopped
+    networks:
+      - airflow
+    user: astro
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+      io.astronomer.docker.component: "airflow-triggerer"
+    depends_on:
+      - postgres
+    environment: *common-env-vars
+    volumes:
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/dags:/usr/local/airflow/dags:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/plugins:/usr/local/airflow/plugins:z
+      - /Users/aiwin/Documents/Projects/aws_redshift/Airflow_DAGs/include:/usr/local/airflow/include:z
+      
+      - airflow_logs:/usr/local/airflow/logs
+      
+    
+
