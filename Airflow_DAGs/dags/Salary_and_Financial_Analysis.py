@@ -92,13 +92,15 @@ def average_salary(**kwargs):
     ti=kwargs['ti']
     df_employee = pd.DataFrame(ti.xcom_pull(task_id = "date_formating_task", key = 'employee'))
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_id='date_formatting',key='salary_history'))
-    df_departments = pd.DataFrame(ti.xom_pull(task_id = 'extextracting_datara', key = 'departments'))
+    df_departments = pd.DataFrame(ti.xcom_pull(task_id = 'extextracting_datara', key = 'departments'))
     df_latest_salary = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate']).groupby('EmployeeID').last().reset_index()
     df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
     df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID'])['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     display(df_avg_salary)    
+    
+    
         
 
 default_args = {
