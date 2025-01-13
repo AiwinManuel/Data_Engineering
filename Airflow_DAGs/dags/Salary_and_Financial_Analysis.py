@@ -99,6 +99,8 @@ def average_salary(**kwargs):
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     print(df_avg_salary)    
     
+    ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))
+    
     
         
 
