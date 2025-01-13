@@ -54,7 +54,7 @@ def currrency_conversion(**kwargs):
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids='extracting_data',key='employee'))
     
     df_employee['ExchangeRate'] = df_employee['Location'].map(exchange_rates)
-    df_employee['SalaryUSD'] = df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
+    df_employee['SalaryUSD'] = df_employee['Salary'] * df_employee['ExchangeRate']
     
     df_salary_history['ExchangeRate'] = df_salary_history['Location'].map(exchange_rates)
     df_salary_history['PreviousSalaryUSD'] = df_salary_history['PreviousSalary'] * df_salary_history['ExchangeRate']  
@@ -90,7 +90,7 @@ def salaryBand(**kwargs):
     
 def average_salary(**kwargs):
     ti=kwargs['ti']
-    df_employee = pd.DataFrame(ti.xcom_pull(task_id = "date_formating_task", key = 'employee'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_id = "date_formatting", key = 'employee'))
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_id='date_formatting',key='salary_history'))
     df_departments = pd.DataFrame(ti.xcom_pull(task_id = 'extextracting_datara', key = 'departments'))
     df_latest_salary = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate']).groupby('EmployeeID').last().reset_index()
