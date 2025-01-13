@@ -4,7 +4,6 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 import pandas as pd
 import io
-from IPython.display import display
 
 
 
@@ -44,7 +43,7 @@ def extract_data(**kwargs):
     kwargs['ti'].xcom_push(key='employee', value=df_employee.to_dict(orient='records'))
     kwargs['ti'].xcom_push(key='performance_reviews',value=df_performance_reviews.to_dict(orient='records'))
     kwargs['ti'].xcom_push(key='salary_history',value=df_salary_history.to_dict(orient='records'))
-    kwargs['ti'].xcom.push(key='departments', value = df_departments.to_dict(orient="records"))
+    kwargs['ti'].xcom_push(key='departments', value = df_departments.to_dict(orient="records"))
     
 
 def currrency_conversion(**kwargs):
@@ -90,15 +89,15 @@ def salaryBand(**kwargs):
     
 def average_salary(**kwargs):
     ti=kwargs['ti']
-    df_employee = pd.DataFrame(ti.xcom_pull(task_id = "date_formatting", key = 'employee'))
-    df_salary_history = pd.DataFrame(ti.xcom_pull(task_id='date_formatting',key='salary_history'))
-    df_departments = pd.DataFrame(ti.xcom_pull(task_id = 'extextracting_datara', key = 'departments'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids = 'date_formatting', key = 'employee'))
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='date_formatting',key='salary_history'))
+    df_departments = pd.DataFrame(ti.xcom_pull(task_ids = 'extracting_data', key = 'departments'))
     df_latest_salary = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate']).groupby('EmployeeID').last().reset_index()
     df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
     df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID'])['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
-    display(df_avg_salary)    
+    print(df_avg_salary)    
     
     
         
