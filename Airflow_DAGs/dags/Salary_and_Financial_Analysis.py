@@ -92,15 +92,16 @@ def average_salary(**kwargs):
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids = 'date_formatting', key = 'employee'))
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='date_formatting',key='salary_history'))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids = 'extracting_data', key = 'departments'))
-    df_latest_salary = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate']).groupby('EmployeeID').last().reset_index()
-    df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary']], on='EmployeeID', how='left' )
+    df_salary_history['salary increase %'] = ((df_salary_history['UpdatedSalary'] - df_salary_history['PreviousSalary']) / df_salary_history['PreviousSalary']) * 100
+    df_latest_salary = df_salary_history.loc[df_salary_history.groupby('EmployeeID')['EffectiveDate'].idxmax()]
+    df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary','salary increase %']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
-    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID'])['UpdatedSalary'].mean().reset_index()
+    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID','salary increase %'])['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     print(df_avg_salary)    
+
     
-    ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))
-    
+    ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))    
     
         
 
