@@ -4,7 +4,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 import pandas as pd
 import io
-import ace_tools as tools
+from IPython.display import display
 
 
 
@@ -98,8 +98,7 @@ def average_salary(**kwargs):
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
     df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID'])['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
-    tools.display_dataframe_to_user(name="Average Salary by Department & Position", dataframe=df_avg_salary)
-    
+    display(df_avg_salary)    
         
 
 default_args = {
