@@ -103,7 +103,7 @@ def average_salary(**kwargs):
     df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary','salary increase %']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
   
-    df_tenure_salary = pd.merge(df_employee, df_latest_salary[['EmployeeID', 'UpdatedSalary', 'SalaryIncrease%']], 
+    df_tenure_salary = pd.merge(df_employee, df_latest_salary[['EmployeeID', 'UpdatedSalary', 'salary increase %']], 
                                 on='EmployeeID', how='left')
     
     
@@ -117,6 +117,7 @@ def average_salary(**kwargs):
 
     
     ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))    
+    ti.xcom_push(key="average_salary_tenure", value = df_avg_salary_tenure.to_dict(orient='records'))
     
 
 def performance_meter(**kwargs):
