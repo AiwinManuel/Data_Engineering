@@ -93,12 +93,27 @@ def average_salary(**kwargs):
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='date_formatting',key='salary_history'))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids = 'extracting_data', key = 'departments'))
     df_salary_history['salary increase %'] = ((df_salary_history['UpdatedSalary'] - df_salary_history['PreviousSalary']) / df_salary_history['PreviousSalary']) * 100
+    currentYear = datetime.now().year
+
     df_latest_salary = df_salary_history.loc[df_salary_history.groupby('EmployeeID')['EffectiveDate'].idxmax()]
+    df_employee['Tenure']= currentYear - pd.to_datetime(df_employee['HireDate']).dt.year
+    tenure_bins = [0, 2, 5, 10, 100]
+    tenure_labels = ['0-2 years', '3-5 years', '6-10 years', '10+ years']
+    df_employee['TenureGroup'] = pd.cut(df_employee['Tenure'], bins=tenure_bins, labels=tenure_labels, right=True)
     df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary','salary increase %']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
+  
+    df_tenure_salary = pd.merge(df_employee, df_latest_salary[['EmployeeID', 'UpdatedSalary', 'SalaryIncrease%']], 
+                                on='EmployeeID', how='left')
+    
+    
+
     df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID','salary increase %'])['UpdatedSalary'].mean().reset_index()
+    df_avg_salary_tenure = df_tenure_salary.groupby('TenureGroup')['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     print(df_avg_salary)    
+    print(df_avg_salary_tenure)
+    
 
     
     ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))    
