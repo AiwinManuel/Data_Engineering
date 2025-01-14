@@ -103,6 +103,33 @@ def average_salary(**kwargs):
     
     ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))    
     
+
+def performance_meter(**kwargs):
+    ti = kwargs['ti']
+    df_performance_reviews = pd.DataFrame(ti.xcom_pull(task_ids="extracting_data", key='performance_reviews'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids="date_formatting", key='employee'))
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids="date_formatting", key='salary_history'))
+    
+    df_salary_performance = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate'])\
+                                              .groupby('EmployeeID').last().reset_index()
+
+    df_performance = pd.merge(df_employee, df_salary_performance[['EmployeeID', 'UpdatedSalary']], 
+                              on='EmployeeID', how='left')
+    df_performance = pd.merge(df_performance, df_performance_reviews[['EmployeeID', 'PromotionRecommendation']], 
+                              on='EmployeeID', how='left')
+    df_performance['PromotionRecommendation'] = df_performance['PromotionRecommendation'].map({'Yes': 1, 'No': 0})
+
+    df_performance.dropna(subset=['UpdatedSalary', 'PromotionRecommendation'], inplace=True)
+
+    df_AvgSalaryForHighPerformers = df_performance.groupby('PromotionRecommendation')['UpdatedSalary'].mean().reset_index()
+    
+    correlation = df_performance['UpdatedSalary'].corr(df_performance['PromotionRecommendation'])
+
+    print(f"Correlation between Salary and Performance Score: {correlation}")
+
+    ti.xcom_push(key='performance_salary_correlation', value=correlation)
+    ti.xcom_push(key='avg_salary_performance', value=df_AvgSalaryForHighPerformers.to_dict(orient='records'))
+    
         
 
 default_args = {
@@ -146,7 +173,11 @@ with DAG(
         python_callable=average_salary
     )
     
+    performance_meter_task = PythonOperator(
+        task_id = "performance_meter",
+        python_callable=performance_meter
+    )
     
     
-    extracting_task >> coverting_currency_task >> date_formatting_task >> salary_band_task >> average_salary_task 
+    extracting_task >> coverting_currency_task >> date_formatting_task >> salary_band_task >> average_salary_task >> performance_meter_task
     
