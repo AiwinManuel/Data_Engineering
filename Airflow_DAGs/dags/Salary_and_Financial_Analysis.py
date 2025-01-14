@@ -92,15 +92,59 @@ def average_salary(**kwargs):
     df_employee = pd.DataFrame(ti.xcom_pull(task_ids = 'date_formatting', key = 'employee'))
     df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids='date_formatting',key='salary_history'))
     df_departments = pd.DataFrame(ti.xcom_pull(task_ids = 'extracting_data', key = 'departments'))
-    df_latest_salary = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate']).groupby('EmployeeID').last().reset_index()
-    df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary']], on='EmployeeID', how='left' )
+    df_salary_history['salary increase %'] = ((df_salary_history['UpdatedSalary'] - df_salary_history['PreviousSalary']) / df_salary_history['PreviousSalary']) * 100
+    currentYear = datetime.now().year
+
+    df_latest_salary = df_salary_history.loc[df_salary_history.groupby('EmployeeID')['EffectiveDate'].idxmax()]
+    df_employee['Tenure']= currentYear - pd.to_datetime(df_employee['HireDate']).dt.year
+    tenure_bins = [0, 2, 5, 10, 100]
+    tenure_labels = ['0-2 years', '3-5 years', '6-10 years', '10+ years']
+    df_employee['TenureGroup'] = pd.cut(df_employee['Tenure'], bins=tenure_bins, labels=tenure_labels, right=True)
+    df_employee_salary = pd.merge(df_employee,df_latest_salary[['EmployeeID', 'UpdatedSalary','salary increase %']], on='EmployeeID', how='left' )
     df_employee_salary= pd.merge(df_employee_salary,df_departments[['DepartmentID', 'DepartmentName']], on = 'DepartmentID', how='left' )
-    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID'])['UpdatedSalary'].mean().reset_index()
+  
+    df_tenure_salary = pd.merge(df_employee, df_latest_salary[['EmployeeID', 'UpdatedSalary', 'salary increase %']], 
+                                on='EmployeeID', how='left')
+    
+    
+
+    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID','salary increase %'])['UpdatedSalary'].mean().reset_index()
+    df_avg_salary_tenure = df_tenure_salary.groupby('TenureGroup')['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     print(df_avg_salary)    
+    print(df_avg_salary_tenure)
     
-    ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))
+
     
+    ti.xcom_push(key="average_salary", value = df_avg_salary.to_dict(orient='records'))    
+    ti.xcom_push(key="average_salary_tenure", value = df_avg_salary_tenure.to_dict(orient='records'))
+    
+
+def performance_meter(**kwargs):
+    ti = kwargs['ti']
+    df_performance_reviews = pd.DataFrame(ti.xcom_pull(task_ids="extracting_data", key='performance_reviews'))
+    df_employee = pd.DataFrame(ti.xcom_pull(task_ids="date_formatting", key='employee'))
+    df_salary_history = pd.DataFrame(ti.xcom_pull(task_ids="date_formatting", key='salary_history'))
+    
+    df_salary_performance = df_salary_history.sort_values(by=['EmployeeID', 'EffectiveDate'])\
+                                              .groupby('EmployeeID').last().reset_index()
+
+    df_performance = pd.merge(df_employee, df_salary_performance[['EmployeeID', 'UpdatedSalary']], 
+                              on='EmployeeID', how='left')
+    df_performance = pd.merge(df_performance, df_performance_reviews[['EmployeeID', 'PromotionRecommendation']], 
+                              on='EmployeeID', how='left')
+    df_performance['PromotionRecommendation'] = df_performance['PromotionRecommendation'].map({'Yes': 1, 'No': 0})
+
+    df_performance.dropna(subset=['UpdatedSalary', 'PromotionRecommendation'], inplace=True)
+
+    df_AvgSalaryForHighPerformers = df_performance.groupby('PromotionRecommendation')['UpdatedSalary'].mean().reset_index()
+    
+    correlation = df_performance['UpdatedSalary'].corr(df_performance['PromotionRecommendation'])
+
+    print(f"Correlation between Salary and Performance Score: {correlation}")
+
+    ti.xcom_push(key='performance_salary_correlation', value=correlation)
+    ti.xcom_push(key='avg_salary_performance', value=df_AvgSalaryForHighPerformers.to_dict(orient='records'))
     
         
 
@@ -145,7 +189,11 @@ with DAG(
         python_callable=average_salary
     )
     
+    performance_meter_task = PythonOperator(
+        task_id = "performance_meter",
+        python_callable=performance_meter
+    )
     
     
-    extracting_task >> coverting_currency_task >> date_formatting_task >> salary_band_task >> average_salary_task 
+    extracting_task >> coverting_currency_task >> date_formatting_task >> salary_band_task >> average_salary_task >> performance_meter_task
     
