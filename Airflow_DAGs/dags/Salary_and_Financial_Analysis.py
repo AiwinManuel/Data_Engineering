@@ -108,7 +108,7 @@ def average_salary(**kwargs):
     
     
 
-    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepartmentName', 'PositionID','salary increase %'])['UpdatedSalary'].mean().reset_index()
+    df_avg_salary = df_employee_salary.groupby(['DepartmentID', 'DepatmentName', 'PositionID','salary increase %'])['UpdatedSalary'].mean().reset_index()
     df_avg_salary_tenure = df_tenure_salary.groupby('TenureGroup')['UpdatedSalary'].mean().reset_index()
     df_avg_salary.rename(columns={'UpdatedSalary': 'AvgSalary'}, inplace=True)
     print(df_avg_salary)    
